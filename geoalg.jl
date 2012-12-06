@@ -118,7 +118,8 @@ function geometricproduct(a::BasisBlade, b::BasisBlade, M::Metric)
     for i = 1:size(A,1), j = 1:size(B,1)
         push(result, geometricproduct(A[i], B[j], M.metric))
     end
-
+    println(result)
+    println(simplifybasis(result))
     return tometricbasis(M, simplifybasis(result))
 end
 
@@ -663,7 +664,7 @@ function transform(a::BasisBlade, M::Matrix{Float64})
                 if M[j,i] != 0
                     m = M[j,i]
                     for k = 1:size(A, 1)
-                        push(tmp, A[k] ^ BasisBlade(1<<j, m))
+                        push(tmp, A[k] ^ BasisBlade(1<<(j-1), m))
                     end
                 end
             end
