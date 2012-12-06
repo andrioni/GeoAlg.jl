@@ -21,5 +21,7 @@ A list of things to do, in no particular order:
  - cos() and sin()
  - Multivector types
  - meet and join (possibly using the new method described [here][newpaper]
+ - A comprehensive benchmark to track performance improvements/regressions
+ - Travis-ci support?
 
-[paper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"
+[newpaper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"
