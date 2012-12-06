@@ -10,11 +10,11 @@ This project follows the license of the original implementation, GPL2.
 [impl]: http://www.geometricalgebra.net/reference_impl.html "Fontijne's implementation in Java"
 
 Things to do
-======
+------
 
 A list of things to do, in no particular order:
 
- - Rewrite as a module/package in idiomatic Julia
+ - Rewrite in idiomatic Julia
  - Implement general_inverse and utility functions for Multivectors
  - Support named basis vectors
  - Maybe a builtin support for popular geometry models (conformal, hyperbolic, homogeneous etc)
