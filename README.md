@@ -14,7 +14,7 @@ Things to do
 
 A list of things to do, in no particular order:
 
- - Rewrite as a module/package
+ - Rewrite as a module/package in idiomatic Julia
  - Support different metrics
  - Maybe a builtin support for popular geometry models (conformal, hyperbolic, homogeneous etc)
  - A comprehensive test suite
@@ -23,5 +23,6 @@ A list of things to do, in no particular order:
  - meet and join (possibly using the new method described [here][newpaper]
  - A comprehensive benchmark to track performance improvements/regressions
  - Travis-ci support?
+ - Write documentation
 
 [newpaper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"

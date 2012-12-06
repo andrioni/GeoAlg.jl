@@ -581,3 +581,51 @@ function expseries(A::Multivector, order::Int)
     return result
 end
 
+type Metric
+    matrix::Matrix{Float64}
+    eigen::(Vector{Float64}, Matrix{Float64})
+    inveig::Matrix{Float64}
+    metric::Vector{Float64}
+    isdiag::Bool
+    iseuclidean::Bool
+    isantieuclidean::Bool
+end
+
+function isdiag(A::Matrix)
+    if istriu(A) && istril(A)
+        return true
+    end
+    return false
+end
+
+
+function Metric(m::Matrix{Float64})
+    matrix = copy(m)
+    if !issym(matrix)
+        error("the metric matrix must be symmetric")
+    end
+
+    eigen = eig(matrix)
+    inveig = transpose(eigen[2])
+    metric = eigen[1]
+    isdiago = isdiag(matrix)
+    if !isdiago
+        iseuclidean = isantieuclidean = false
+    else
+        iseuclidean = isantieuclidean = true
+        for i = 1:size(matrix, 1)
+            if matrix[i,i] != 1.0
+                iseuclidean = false
+            end
+            if matrix[i,i] != -1.0
+                isantieuclidean = false
+            end
+        end
+    end
+    Metric(matrix, eigen, inveig, metric, isdiago, iseuclidean, isantieuclidean)
+end
+
+function Metric{T<:Number}(m::Matrix{T})
+    matrix = float64(m)
+    Metric(matrix)
+end
