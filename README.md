@@ -15,7 +15,8 @@ Things to do
 A list of things to do, in no particular order:
 
  - Rewrite as a module/package in idiomatic Julia
- - Support different metrics
+ - Implement general_inverse and utility functions for Multivectors
+ - Support named basis vectors
  - Maybe a builtin support for popular geometry models (conformal, hyperbolic, homogeneous etc)
  - A comprehensive test suite
  - cos() and sin()

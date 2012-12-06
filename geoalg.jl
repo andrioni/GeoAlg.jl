@@ -118,8 +118,6 @@ function geometricproduct(a::BasisBlade, b::BasisBlade, M::Metric)
     for i = 1:size(A,1), j = 1:size(B,1)
         push(result, geometricproduct(A[i], B[j], M.metric))
     end
-    println(result)
-    println(simplifybasis(result))
     return tometricbasis(M, simplifybasis(result))
 end
 
@@ -256,13 +254,13 @@ function show(io, a::Multivector)
 end
 
 function basisvector(idx::Int)
-    return Multivector(BasisBlade(1 << idx))
+    return Multivector(BasisBlade(1 << (idx-1)))
 end
 
 function randomvector(dim::Int, scale::Float64)
     result = Array(BasisBlade, dim)
     for i = 1:dim
-        result[i] = BasisBlade(1 << i, 2 * scale * (rand - 0.5))
+        result[i] = BasisBlade(1 << (i-1), 2 * scale * (rand() - 0.5))
     end
     return Multivector(result)
 end
@@ -279,9 +277,30 @@ function copy(a::BasisBlade)
     return BasisBlade(a.bitmap, a.scale)
 end
 
-# Depende da métrica
-#function randomversor(dim::Int, grade::Int, scale::Float64)
-    #randomversor(dim, grande, scale, )
+function randomversor(dim::Int, grade::Int, scale::Float64)
+    result = Multivector(2 * scale * (rand() - 0.5))
+    for i = 1:grade
+        result = result * randomvector(dim, scale)
+    end
+    return result
+end
+
+function randomversor(dim::Int, grade::Int, scale::Float64, M::Metric)
+    result = Multivector(2 * scale * (rand() - 0.5))
+    for i = 1:grade
+        result = geometricproduct(result, randomvector(dim, scale), M)
+    end
+    return result
+end
+
+function randomversor(dim::Int, grade::Int, scale::Float64, M::Vector{Float64})
+    result = Multivector(2 * scale * (rand() - 0.5))
+    for i = 1:grade
+        result = geometricproduct(result, randomvector(dim, scale), M)
+    end
+    return result
+end
+
 
 function cmp(a::BasisBlade, b::BasisBlade)
     cmp(a.bitmap, b.bitmap)
@@ -368,6 +387,40 @@ function (*)(A::Multivector, B::Multivector)
     return Multivector(simplify(result))
 end
 
+geometricproduct(A::Multivector, a::Float64) = A * a
+geometricproduct(a::Float64, A::Multivector) = A * a
+geometricproduct(A::Multivector, a::Int) = A * float64(a)
+geometricproduct(a::Int, A::Multivector) = A * float64(a)
+geometricproduct(A::Multivector, B::Multivector) = A * B
+
+function geometricproduct(A::Multivector, B::Multivector, M::Metric)
+    result = BasisBlade[]
+    for i = 1:size(A.blades)[1]
+        B1 = A.blades[i]
+        for j = 1:size(B.blades)[1]
+            B2 = B.blades[j]
+            result = vcat(result, geometricproduct(B1, B2, M))
+        end
+    end
+    return Multivector(simplify(result))
+end
+
+function geometricproduct(A::Multivector, B::Multivector, M::Vector{Float64})
+    result = Array(BasisBlade, size(A.blades,1) * size(B.blades,1))
+    k = 1
+    for i = 1:size(A.blades)[1]
+        B1 = A.blades[i]
+        for j = 1:size(B.blades)[1]
+            B2 = B.blades[j]
+            result[k] = geometricproduct(B1, B2, M)
+            k += 1
+        end
+    end
+    return Multivector(simplify(result))
+end
+
+outerproduct(A::Multivector, B::Multivector) = A ^ B
+
 function (^)(A::Multivector, B::Multivector)
     result = Array(BasisBlade, size(A.blades)[1] * size(B.blades)[1])
     k = 1
@@ -396,6 +449,34 @@ function innerproduct(A::Multivector, B::Multivector, typ::Int)
     return Multivector(simplify(result))
 end
 
+function innerproduct(A::Multivector, B::Multivector, M::Metric, typ::Int)
+    result = Array(BasisBlade, size(A.blades)[1] * size(B.blades)[1])
+    k = 1
+    for i = 1:size(A.blades)[1]
+        B1 = A.blades[i]
+        for j = 1:size(B.blades)[1]
+            B2 = B.blades[j]
+            result[k] = innerproduct(B1, B2, M, typ)
+            k += 1
+        end
+    end
+    return Multivector(simplify(result))
+end
+
+function innerproduct(A::Multivector, B::Multivector, M::Vector{Float64}, typ::Int)
+    result = Array(BasisBlade, size(A.blades)[1] * size(B.blades)[1])
+    k = 1
+    for i = 1:size(A.blades)[1]
+        B1 = A.blades[i]
+        for j = 1:size(B.blades)[1]
+            B2 = B.blades[j]
+            result[k] = innerproduct(B1, B2, M, typ)
+            k += 1
+        end
+    end
+    return Multivector(simplify(result))
+end
+
 function scalarpart(A::Multivector)
     s = 0.0
     for i = 1:size(A.blades)[1]
@@ -409,6 +490,14 @@ end
 
 function scalarproduct(A::Multivector, B::Multivector)
     return scalarpart(innerproduct(A, B, LEFT_CONTRACTION))
+end
+
+function scalarproduct(A::Multivector, B::Multivector, M::Metric)
+    scalarpart(innerproduct(A, B, M, LEFT_CONTRACTION))
+end
+
+function scalarproduct(A::Multivector, B::Float64, M::Metric)
+    scalarpart(innerproduct(A, B, M, LEFT_CONTRACTION))
 end
 
 function (+)(A::Multivector, b::Float64)
@@ -531,7 +620,6 @@ function extractgrade(A::Multivector, G::Vector{Int})
     return Multivector(result)
 end
 
-# Falta com métrica
 function versorinverse(A::Multivector)
     R = reverse(A)
     s = scalarproduct(A, R)
@@ -541,9 +629,37 @@ function versorinverse(A::Multivector)
     return R * (1.0 / s)
 end
 
+function versorinverse(A::Multivector, M::Metric)
+    R = reverse(A)
+    s = scalarproduct(A, R, M)
+    if s == 0.0
+        error("Non-invertible multivector")
+    end
+    return R * (1.0 / s)
+end
+
+function versorinverse(A::Multivector, M::Vector{Float64})
+    R = reverse(A)
+    s = scalarproduct(A, R, M)
+    if s == 0.0
+        error("Non-invertible multivector")
+    end
+    return R * (1.0 / s)
+end
+
 function dual(A::Multivector, dim::Int)
     I = Multivector(BasisBlade((1 << dim) - 1, 1.0))
     return innerproduct(A, versorinverse(I), LEFT_CONTRACTION)
+end
+
+function dual(A::Multivector, M::Metric)
+    I = Multivector(BasisBlade((1 << size(M.metric, 1)) - 1, 1.0))
+    innerproduct(A, versorinverse(I), M, LEFT_CONTRACTION)
+end
+
+function dual(A::Multivector, M::Vector{Float64})
+    I = Multivector(BasisBlade((1 << size(M, 1)) - 1, 1.0))
+    innerproduct(A, versorinverse(I), M, LEFT_CONTRACTION)
 end
 
 function isnull(A::Multivector, epsilon::Float64)
@@ -566,7 +682,6 @@ end
 
 
 exp(A::Multivector) = exp(A, 12)
-# Falta caso com métrica
 function exp(A::Multivector, order::Int)
     A2 = compress(A * A)
     if isnull(A2, 1e-8)
@@ -581,6 +696,42 @@ function exp(A::Multivector, order::Int)
         end
     else
         return expseries(A, order)
+    end
+end
+
+exp(A::Multivector, M::Metric) = exp(A, M, 12)
+function exp(A::Multivector, M::Metric, order::Int)
+    A2 = compress(geometricproduct(A, A, M))
+    if isnull(A2, 1e-8)
+        return A + 1
+    elseif isscalar(A2)
+        a2 = scalarpart(A2)
+        if a2 < 0
+            alpha = sqrt(-a2)
+            return A * (sin(alpha)/alpha) + cos(alpha)
+        else alpha = sqrt(a2)
+            return A * (sinh(alpha) / alpha) + cosh(alpha)
+        end
+    else
+        return expseries(A, M, order)
+    end
+end
+
+exp(A::Multivector, M::Vector{Float64}) = exp(A, M, 12)
+function exp(A::Multivector, M::Vector{Float64}, order::Int)
+    A2 = compress(geometricproduct(A, A, M))
+    if isnull(A2, 1e-8)
+        return A + 1
+    elseif isscalar(A2)
+        a2 = scalarpart(A2)
+        if a2 < 0
+            alpha = sqrt(-a2)
+            return A * (sin(alpha)/alpha) + cos(alpha)
+        else alpha = sqrt(a2)
+            return A * (sinh(alpha) / alpha) + cosh(alpha)
+        end
+    else
+        return expseries(A, M, order)
     end
 end
 
@@ -606,6 +757,62 @@ function expseries(A::Multivector, order::Int)
 
     while scale > 1
         result = result * result
+        scale >>>= 1
+    end
+
+    return result
+end
+
+function expseries(A::Multivector, M::Metric, order::Int)
+    scale = 1
+    maxi = norm_e(A)
+    if maxi > 1.0
+        scale <<= 1
+    end
+    while maxi > 1.0
+        maxi = maxi / 2
+        scale <<= 1
+    end
+
+    scaled = A * (1 / scale)
+
+    result = Multivector(1.0)
+    tmp = Multivector(1.0)
+    for i = 1:order
+        tmp = geometricproduct(tmp, scaled * (1/i), M)
+        result = result + tmp
+    end
+
+    while scale > 1
+        result = geometricproduct(result, result, M)
+        scale >>>= 1
+    end
+
+    return result
+end
+
+function expseries(A::Multivector, M::Vector{Float64}, order::Int)
+    scale = 1
+    maxi = norm_e(A)
+    if maxi > 1.0
+        scale <<= 1
+    end
+    while maxi > 1.0
+        maxi = maxi / 2
+        scale <<= 1
+    end
+
+    scaled = A * (1 / scale)
+
+    result = Multivector(1.0)
+    tmp = Multivector(1.0)
+    for i = 1:order
+        tmp = geometricproduct(tmp, scaled * (1/i), M)
+        result = result + tmp
+    end
+
+    while scale > 1
+        result = geometricproduct(result, result, M)
         scale >>>= 1
     end
 
