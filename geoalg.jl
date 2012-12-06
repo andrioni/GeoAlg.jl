@@ -12,11 +12,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#module GeoAlg
+
 import Base.*
 import Base.reverse
 import Base.^
 import Base.+
 import Base.-
+import Base.~
 import Base.exp
 import Base.cmp
 import Base.==
@@ -94,6 +97,7 @@ end
 grade(a::BasisBlade) = bitcount(a.bitmap)
 minusonepow(i::Int) = ((i & 1) == 0) ? 1 : -1
 reverse(a::BasisBlade) = BasisBlade(a.bitmap, minusonepow(div(grade(a) * (grade(a) - 1), 2)) * a.scale);
+(~)(a::BasisBlade) = reverse(a)
 gradeinversion(a::BasisBlade) = BasisBlade(bitmap, minusonepow(grade(a)) * a.scale)
 cliffordconjugate(a::BasisBlade) = BasisBlade(bitmap, minusonepow(div(grade(a) * (grade(a) + 1), 2)) * a.scale);
 
@@ -577,6 +581,7 @@ function reverse(A::Multivector)
     end
     return Multivector(result)
 end
+(~)(A::Multivector) = reverse(A)
 
 function gradeinversion(A::Multivector)
     result = Array(BasisBlade, size(A.blades, 1))
