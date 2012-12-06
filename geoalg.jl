@@ -1,3 +1,17 @@
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 import Base.*
 import Base.reverse
 import Base.^
@@ -10,6 +24,7 @@ import Base.<=, Base.>=, Base.<, Base.>
 import Base.isless
 import Base.show
 import Base.string
+import Base.copy
 
 const LEFT_CONTRACTION = 0
 const RIGHT_CONTRACTION = 1
@@ -229,6 +244,10 @@ function randomblade(dim::Int, grade::Int, scale::Float64)
     return result
 end
 
+function copy(a::BasisBlade)
+    return BasisBlade(a.bitmap, a.scale)
+end
+
 # Depende da métrica
 #function randomversor(dim::Int, grade::Int, scale::Float64)
     #randomversor(dim, grande, scale, )
@@ -390,7 +409,7 @@ function compress(A::Multivector, epsilon::Float64)
     simplify(A)
     maxmag = 0.0
     for i = 1:size(A.blades, 1)
-        b = blades[i]
+        b = A.blades[i]
         maxmag = max(abs(b.scale), maxmag)
     end
     if maxmag == 0.0
@@ -439,6 +458,63 @@ function reverse(A::Multivector)
     return Multivector(result)
 end
 
+function gradeinversion(A::Multivector)
+    result = Array(BasisBlade, size(A.blades, 1))
+    for i = 1:size(A.blades, 1)
+        result[i] = gradeinversion(A.blades[i])
+    end
+    return Multivector(result)
+end
+
+function cliffordconjugate(A::Multivector)
+    result = Array(BasisBlade, size(A.blades, 1))
+    for i = 1:size(A.blades, 1)
+        result[i] = cliffordconjugate(A.blades[i])
+    end
+    return Multivector(result)
+end
+
+function extractgrade(A::Multivector, G::Vector{Int})
+    maxg = 0
+    for i = 1:size(G, 1)
+        if G[i] > maxg
+            maxg = G[i]
+        end
+    end
+
+    keep = Array(Bool, maxg + 1)
+    for i = 1:size(G, 1)
+        keep[G[i]] = true
+    end
+
+    result = BasisBlade[]
+    for i = 1:size(A.blades, 1)
+        b = A.blades[i]
+        g = grade(b)
+        if g > maxg
+            continue
+        elseif keep[g]
+            push(result, copy(b))
+        end
+    end
+    return Multivector(result)
+end
+
+# Falta com métrica
+function versorinverse(A::Multivector)
+    R = reverse(A)
+    s = scalarproduct(A, R)
+    if s == 0.0
+        error("Non-invertible multivector")
+    end
+    return R * (1.0 / s)
+end
+
+function dual(A::Multivector, dim::Int)
+    I = Multivector(BasisBlade((1 << dim) - 1, 1.0))
+    return innerproduct(A, versorinverse(I), LEFT_CONTRACTION)
+end
+
 function isnull(A::Multivector, epsilon::Float64)
     s = norm_e2(A)
     return (s < epsilon * epsilon)
@@ -468,9 +544,9 @@ function exp(A::Multivector, order::Int)
         a2 = scalarpart(A2)
         if a2 < 0
             alpha = sqrt(-a2)
-            return A * sin(alpha)/alpha + cos(alpha)
+            return A * (sin(alpha)/alpha) + cos(alpha)
         else alpha = sqrt(a2)
-            return A * sinh(alpha) / alpha + cosh(alpha)
+            return A * (sinh(alpha) / alpha) + cosh(alpha)
         end
     else
         return expseries(A, order)
