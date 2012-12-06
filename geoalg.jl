@@ -119,7 +119,7 @@ function geometricproduct(a::BasisBlade, b::BasisBlade, M::Metric)
         push(result, geometricproduct(A[i], B[j], M.metric))
     end
 
-    return tometricbasis(M, simplify(result))
+    return tometricbasis(M, simplifybasis(result))
 end
 
 
@@ -654,7 +654,7 @@ function transform(a::BasisBlade, M::Matrix{Float64})
     A = BasisBlade[]
     push(A, BasisBlade(a.scale))
 
-    i = 0
+    i = 1
     b = a.bitmap
     while b != 0
         if b & 1 != 0
@@ -681,4 +681,44 @@ end
 
 function tometricbasis(M::Metric, a::BasisBlade)
     transform(a, M.eigen[2])
+end
+
+function tometricbasis(M::Metric, a::Vector{BasisBlade})
+    result = BasisBlade[]
+    for i = 1:size(a,1)
+        tmp = tometricbasis(M, a[i])
+        result = vcat(result, tmp)
+    end
+    return simplifybasis(result)
+end
+
+function simplifybasis(A::Vector{BasisBlade})
+    if size(A,1) == 0
+        return A
+    end
+
+    sort!((x,y)->basiscmp(x,y) <= 0, A)
+    result = BasisBlade[]
+    current = copy(A[1])
+    for i = 2:size(A,1)
+        b = A[i]
+        if b.bitmap == current.bitmap
+            current.scale += b.scale
+        else
+            if current.scale != 0.0
+                push(result, current)
+            end
+            current = copy(b)
+        end
+    end
+    if current.scale != 0.0
+        push(result, current)
+    end
+    return result
+end
+
+
+function basiscmp(a::BasisBlade, b::BasisBlade)
+    return a.bitmap < b.bitmap ? -1 :
+    ((a.bitmap > b.bitmap) ? 1 : cmp(a.scale, b.scale))
 end
