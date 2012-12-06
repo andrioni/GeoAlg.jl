@@ -36,6 +36,16 @@ type BasisBlade
     scale::Float64
 end
 
+type Metric
+    matrix::Matrix{Float64}
+    eigen::(Vector{Float64}, Matrix{Float64})
+    inveig::Matrix{Float64}
+    metric::Vector{Float64}
+    isdiag::Bool
+    iseuclidean::Bool
+    isantieuclidean::Bool
+end
+
 function BasisBlade(b::Int)
     BasisBlade(b, 1.0)
 end
@@ -101,7 +111,19 @@ function geometricproduct(a::BasisBlade, b::BasisBlade, m::Vector{Float64})
     return result
 end
 
-function innerproductfilter(ga::Int, gb::Int, R, typ::Int)
+function geometricproduct(a::BasisBlade, b::BasisBlade, M::Metric)
+    A = toeigenbasis(M, a)
+    B = toeigenbasis(M, b)
+    result = BasisBlade[]
+    for i = 1:size(A,1), j = 1:size(B,1)
+        push(result, geometricproduct(A[i], B[j], M.metric))
+    end
+
+    return tometricbasis(M, simplify(result))
+end
+
+
+function innerproductfilter(ga::Int, gb::Int, R::Vector{BasisBlade}, typ::Int)
     result = []
     for i = 1:size(R)[1]
         B = innerproductfilter(ga, gb, R[i], typ)
@@ -146,6 +168,14 @@ end
 
 function innerproduct(a::BasisBlade, b::BasisBlade, typ::Int)
     innerproductfilter(grade(a), grade(b), a * b, typ)
+end
+
+function innerproduct(a::BasisBlade, b::BasisBlade, m::Vector{Float64}, typ::Int)
+    innerproductfilter(grade(a), grade(b), geometricproduct(a, b, m), typ)
+end
+
+function innerproduct(a::BasisBlade, b::BasisBlade, m::Metric, typ::Int)
+    innerproductfilter(grade(a), grade(b), geometricproduct(a, b, M), typ)
 end
 
 (==)(a::BasisBlade, b::BasisBlade) = (a.bitmap == b.bitmap) && (a.scale == b.scale)
@@ -581,16 +611,6 @@ function expseries(A::Multivector, order::Int)
     return result
 end
 
-type Metric
-    matrix::Matrix{Float64}
-    eigen::(Vector{Float64}, Matrix{Float64})
-    inveig::Matrix{Float64}
-    metric::Vector{Float64}
-    isdiag::Bool
-    iseuclidean::Bool
-    isantieuclidean::Bool
-end
-
 function isdiag(A::Matrix)
     if istriu(A) && istril(A)
         return true
@@ -628,4 +648,37 @@ end
 function Metric{T<:Number}(m::Matrix{T})
     matrix = float64(m)
     Metric(matrix)
+end
+
+function transform(a::BasisBlade, M::Matrix{Float64})
+    A = BasisBlade[]
+    push(A, BasisBlade(a.scale))
+
+    i = 0
+    b = a.bitmap
+    while b != 0
+        if b & 1 != 0
+            tmp = BasisBlade[]
+            for j= 1:size(M, 1)
+                if M[j,i] != 0
+                    m = M[j,i]
+                    for k = 1:size(A, 1)
+                        push(tmp, A[k] ^ BasisBlade(1<<j, m))
+                    end
+                end
+            end
+            A = tmp
+        end
+        b >>= 1
+        i += 1
+    end
+    return A
+end
+
+function toeigenbasis(M::Metric, a::BasisBlade)
+    transform(a, M.inveig)
+end
+
+function tometricbasis(M::Metric, a::BasisBlade)
+    transform(a, M.eigen[2])
 end
