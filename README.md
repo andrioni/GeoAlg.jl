@@ -25,5 +25,6 @@ A list of things to do, in no particular order:
  - A comprehensive benchmark to track performance improvements/regressions
  - Travis-ci support?
  - Write documentation
+ - Use BitArray for bitmaps instead of integers?
 
 [newpaper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"
