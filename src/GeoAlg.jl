@@ -832,7 +832,7 @@ function string(a::BasisBlade)
     b = a.bitmap
     while b != 0
         if (b & 1) != 0
-            if size(result)[1] > 0
+            if length(result) > 0
                 result *= "^"
             end
             result *= "e$i"
@@ -841,10 +841,10 @@ function string(a::BasisBlade)
         i += 1
     end
 
-    return size(result)[1] == 0 ? string(a.scale) : string(a.scale) * "*" * result
+    return length(result) == 0 ? string(a.scale) : string(a.scale) * "*" * result
 end
 
-function show(io, a::BasisBlade)
+function show(io::IO, a::BasisBlade)
     print(io, string(a))
 end
 
@@ -852,7 +852,7 @@ end
 
 function (==)(A::Multivector, B::Multivector)
     zer = A - B
-    return size(zer.blades)[1] == 0
+    return size(zer.blades,1) == 0
 end
 
 function string(A::Multivector)
@@ -874,7 +874,7 @@ function string(A::Multivector)
     return result
 end
 
-function show(io, a::Multivector)
+function show(io::IO, a::Multivector)
     print(io, string(a))
 end
 
