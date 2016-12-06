@@ -949,11 +949,11 @@ function simplify(L::Vector{BasisBlade})
     while i <= size(L, 1)
         curblade = L[i]
         if curblade.scale == 0.0
-            del(L, i)
+            deleteat!(L, i)
             prev = 0
         elseif (prev != 0) && (prev.bitmap == curblade.bitmap)
             prev.scale += curblade.scale
-            del(L, i)
+            deleteat!(L, i)
         else
             if (prev != 0) && (prev.scale == 0.0)
                 removenull = true
@@ -968,7 +968,7 @@ function simplify(L::Vector{BasisBlade})
         while i <= size(L, 1)
             curblade = L[i]
             if curblade.scale == 0.0
-                del(L, i)
+                deleteat!(L, i)
             else
                 i += 1
             end
@@ -998,7 +998,7 @@ function compress(A::Multivector, epsilon::Float64)
         while i <= size(A.blades, 1)
             b = A.blades[i]
             if abs(b.scale) < maxmag
-                del(A.blades, i)
+                deleteat!(A.blades, i)
             else
                 i += 1
             end

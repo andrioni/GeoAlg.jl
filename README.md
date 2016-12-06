@@ -35,6 +35,9 @@ Quick start
 include("GeoAlg.jl")
 using GeoAlg
 
+julia> e0 = basisvector(0)
+1.0
+
 julia> e1 = basisvector(1)
 1.0*e1
 
@@ -47,37 +50,23 @@ julia> e3 = basisvector(3)
 julia> scalarproduct(e1,e1)
 1.0
 
+julia> scalarproduct(e1,e2)
+0.0
+
 julia> e1 + 2 * e2 + e3
 1.0*e1 + 2.0*e2 + 1.0*e3
-
-julia> e1 = basisvector(1)
-1.0*e1
-
-julia> e2 = basisvector(2)
-1.0*e2
 
 julia> e1^e2
 1.0*e1^e2
 
-Bugs
-----
-Some simple operations don't appear to work.
+julia> e1^e1
+0
 
-julia> scalarproduct(e1,e2)
-ERROR: UndefVarError: del not defined
- in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
- in innerproduct at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:512
- in scalarproduct at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:366
+julia> e1^e2
+1.0*e1^e2
 
-julia> (e1 + 2 * e2 + e3)^ e1
-ERROR: UndefVarError: del not defined
- in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
- in ^ at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:498
+julia> (e0 + e1 + e1^e3)^e2
+1.0*e2 + 1.0*e1^e2 - 1.0*e1^e2^e3
 
-The simplest such test scenerio seems to be wedging a vector with itself:
-
-julia> e2^e2
-ERROR: UndefVarError: del not defined
- in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
- in ^ at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:498
-
+julia> (e0 + e1 + e1^e3)^e2^e3
+1.0*e2^e3 + 1.0*e1^e2^e3
