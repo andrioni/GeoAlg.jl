@@ -32,9 +32,9 @@ A list of things to do, in no particular order:
 Quick start
 -----------
 
-include("GeoAlg.jl")
+julia> include("GeoAlg.jl")
 
-using GeoAlg
+julia> using GeoAlg
 
 julia> e0 = basisvector(0)
 
