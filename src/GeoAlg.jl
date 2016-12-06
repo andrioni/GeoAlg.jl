@@ -88,16 +88,15 @@ type Multivector
 end
 
 type Metric
-    matrix::Matrix{Float64}
-    eigen::(Vector{Float64}, Matrix{Float64})
-    inveig::Matrix{Float64}
+    matrix::Array{Float64,2}
+    eigen::Tuple{Array{Float64,1},Array{Float64,2}}
+    inveig::Array{Float64,2}
     metric::Vector{Float64}
     isdiag::Bool
     iseuclidean::Bool
     isantieuclidean::Bool
 
-
-    function Metric(m::Matrix{Float64})
+    function Metric(m::Array{Float64,2})
         matrix = copy(m)
         if !issym(matrix)
             error("the metric matrix must be symmetric")
@@ -720,7 +719,7 @@ function isdiag(A::Matrix)
     return false
 end
 
-function transform(a::BasisBlade, M::Matrix{Float64})
+function transform(a::BasisBlade, M::Array{Float64,2})
     A = BasisBlade[]
     push(A, BasisBlade(a.scale))
 
