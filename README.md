@@ -28,3 +28,41 @@ A list of things to do, in no particular order:
  - Use BitArray for bitmaps instead of integers?
 
 [newpaper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"
+
+Quick start
+-----------
+
+include("GeoAlg.jl")
+using GeoAlg
+
+julia> e1 = basisvector(1)
+1.0*e1
+
+julia> e2 = basisvector(2)
+1.0*e2
+
+julia> e3 = basisvector(3)
+1.0*e3
+
+julia> scalarproduct(e1,e1)
+1.0
+
+julia> e1 + 2 * e2 + e3
+1.0*e1 + 2.0*e2 + 1.0*e3
+
+Bugs
+----
+Some simple operations don't appear to work.
+
+julia> scalarproduct(e1,e2)
+ERROR: UndefVarError: del not defined
+ in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
+ in innerproduct at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:512
+ in scalarproduct at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:366
+
+julia> (e1 + 2 * e2 + e3)^ e1
+ERROR: UndefVarError: del not defined
+ in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
+ in ^ at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:498
+
+
