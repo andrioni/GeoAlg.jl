@@ -50,6 +50,15 @@ julia> scalarproduct(e1,e1)
 julia> e1 + 2 * e2 + e3
 1.0*e1 + 2.0*e2 + 1.0*e3
 
+julia> e1 = basisvector(1)
+1.0*e1
+
+julia> e2 = basisvector(2)
+1.0*e2
+
+julia> e1^e2
+1.0*e1^e2
+
 Bugs
 ----
 Some simple operations don't appear to work.
@@ -65,4 +74,10 @@ ERROR: UndefVarError: del not defined
  in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
  in ^ at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:498
 
+The simplest such test scenerio seems to be wedging a vector with itself:
+
+julia> e2^e2
+ERROR: UndefVarError: del not defined
+ in simplify at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:921
+ in ^ at /Users/pjoot/freeware/GeoAlg.jl/src/GeoAlg.jl:498
 
