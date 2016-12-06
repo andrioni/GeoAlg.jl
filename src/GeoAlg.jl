@@ -67,37 +67,71 @@ const MODIFIED_HESTENES_INNER_PRODUCT = 3
 # Types
 #--------------------------------------------------------------
 
+"
+Examples:
+julia> t = BasisBlade(0)
+1.0
+
+julia> t = BasisBlade(1)
+1.0*e1
+
+julia> t = BasisBlade(2)
+1.0*e2
+
+julia> t = BasisBlade(1,3.14)^BasisBlade(2)
+3.14*e1^e2
+
+The behaviour of this type constructor is not obvious to me.  For example,
+some values produce bivectors:
+
+julia> BasisBlade(3)
+1.0*e1^e2
+
+julia> BasisBlade(5)
+1.0*e1^e3
+"
 type BasisBlade
     bitmap::Int64
     scale::Float64
 
-    BasisBlade{T<:Number}(b::Int, s::T) = new(b, float64(s))
+    BasisBlade{T<:Number}(b::Int, s::T) = new(b, Float64(s))
     BasisBlade(b::Int) = new(b, 1.0)
     BasisBlade(s::Float64) = new(0, s)
     BasisBlade() = new(0, 0.0)
 end
 
+"
+Construct a multivector from a BasisBlade.
+
+julia> t = BasisBlade(1,3.14)^BasisBlade(2)
+3.14*e1^e2
+
+julia> w = BasisBlade(2)
+1.0*e2
+
+julia> z = Multivector(w) + Multivector(t)
+1.0*e2 + 3.14*e1^e2
+"
 type Multivector
     blades::Vector{BasisBlade}
     sorted::Bool
 
     Multivector() = new(BasisBlade[], false)
-    Multivector{T<:Number}(s::T) = new([BasisBlade(float64(s))], false)
+    Multivector{T<:Number}(s::T) = new([BasisBlade(Float64(s))], false)
     Multivector(B::Vector{BasisBlade}) = new(B, false)
     Multivector(b::BasisBlade) = new([b], false)
 end
 
 type Metric
-    matrix::Matrix{Float64}
-    eigen::(Vector{Float64}, Matrix{Float64})
-    inveig::Matrix{Float64}
+    matrix::Array{Float64,2}
+    eigen::Tuple{Array{Float64,1},Array{Float64,2}}
+    inveig::Array{Float64,2}
     metric::Vector{Float64}
     isdiag::Bool
     iseuclidean::Bool
     isantieuclidean::Bool
 
-
-    function Metric(m::Matrix{Float64})
+    function Metric(m::Array{Float64,2})
         matrix = copy(m)
         if !issym(matrix)
             error("the metric matrix must be symmetric")
@@ -124,7 +158,7 @@ type Metric
     end
 
     function Metric{T<:Number}(m::Matrix{T})
-        matrix = float64(m)
+        matrix = Float64(m)
         Metric(matrix)
     end
 end
@@ -132,6 +166,19 @@ end
 #--------------------------------------------------------------
 # Alternate "constructors"
 #--------------------------------------------------------------
+
+"
+Return a Multivector representation of a vector.
+
+julia> basisvector(4)
+1.0*e4
+
+julia> basisvector(4)^basisvector(2)
+-1.0*e2^e4
+
+julia> r = basisvector(4)^basisvector(2)*3
+-3.0*e2^e4
+"
 function basisvector(idx::Int)
     return Multivector(BasisBlade(1 << (idx-1)))
 end
@@ -364,8 +411,8 @@ function (+)(A::Multivector, b::Float64)
     return Multivector(simplify(copy(result)))
 end
 (+)(b::Float64, A::Multivector) = A + b
-(+)(b::Int, A::Multivector) = A + float64(b)
-(+)(A::Multivector, b::Int) = A + float64(b)
+(+)(b::Int, A::Multivector) = A + Float64(b)
+(+)(A::Multivector, b::Int) = A + Float64(b)
 
 function (+)(A::Multivector, B::Multivector)
     result = vcat(A.blades, B.blades)
@@ -374,8 +421,8 @@ end
 
 (-)(A::Multivector, b::Float64) = A + (-b)
 (-)(b::Float64, A::Multivector) = b + (-1.0 * A)
-(-)(A::Multivector, b::Float64) = A + (-float64(b))
-(-)(b::Float64, A::Multivector) = float64(b) + (-1.0 * A)
+(-)(A::Multivector, b::Float64) = A + (-Float64(b))
+(-)(b::Float64, A::Multivector) = Float64(b) + (-1.0 * A)
 
 function (-)(A::Multivector, B::Multivector)
     result = vcat(A.blades, (-1.0 * B).blades)
@@ -417,8 +464,8 @@ function (*)(A::Multivector, a::Float64)
 end
 
 (*)(a::Float64, A::Multivector) = A * a
-(*)(a::Int, A::Multivector) = A * float64(a)
-(*)(A::Multivector, a::Int) = A * float64(a)
+(*)(a::Int, A::Multivector) = A * Float64(a)
+(*)(A::Multivector, a::Int) = A * Float64(a)
 
 function (*)(A::Multivector, B::Multivector)
     result = Array(BasisBlade, size(A.blades)[1] * size(B.blades)[1])
@@ -436,8 +483,8 @@ end
 
 geometricproduct(A::Multivector, a::Float64) = A * a
 geometricproduct(a::Float64, A::Multivector) = A * a
-geometricproduct(A::Multivector, a::Int) = A * float64(a)
-geometricproduct(a::Int, A::Multivector) = A * float64(a)
+geometricproduct(A::Multivector, a::Int) = A * Float64(a)
+geometricproduct(a::Int, A::Multivector) = A * Float64(a)
 geometricproduct(A::Multivector, B::Multivector) = A * B
 
 function geometricproduct(A::Multivector, B::Multivector, M::Metric)
@@ -720,7 +767,7 @@ function isdiag(A::Matrix)
     return false
 end
 
-function transform(a::BasisBlade, M::Matrix{Float64})
+function transform(a::BasisBlade, M::Array{Float64,2})
     A = BasisBlade[]
     push(A, BasisBlade(a.scale))
 
@@ -902,11 +949,11 @@ function simplify(L::Vector{BasisBlade})
     while i <= size(L, 1)
         curblade = L[i]
         if curblade.scale == 0.0
-            del(L, i)
+            deleteat!(L, i)
             prev = 0
         elseif (prev != 0) && (prev.bitmap == curblade.bitmap)
             prev.scale += curblade.scale
-            del(L, i)
+            deleteat!(L, i)
         else
             if (prev != 0) && (prev.scale == 0.0)
                 removenull = true
@@ -921,7 +968,7 @@ function simplify(L::Vector{BasisBlade})
         while i <= size(L, 1)
             curblade = L[i]
             if curblade.scale == 0.0
-                del(L, i)
+                deleteat!(L, i)
             else
                 i += 1
             end
@@ -951,7 +998,7 @@ function compress(A::Multivector, epsilon::Float64)
         while i <= size(A.blades, 1)
             b = A.blades[i]
             if abs(b.scale) < maxmag
-                del(A.blades, i)
+                deleteat!(A.blades, i)
             else
                 i += 1
             end

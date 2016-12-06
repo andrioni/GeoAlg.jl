@@ -28,3 +28,58 @@ A list of things to do, in no particular order:
  - Use BitArray for bitmaps instead of integers?
 
 [newpaper]: http://www.geometricalgebra.net/downloads/fontijne_agacse2008_fact_join_blades.pdf "Fontijne's paper"
+
+Quick start
+-----------
+
+julia> include("GeoAlg.jl")
+
+julia> using GeoAlg
+
+julia> e0 = basisvector(0)
+
+1.0
+
+julia> e1 = basisvector(1)
+
+1.0*e1
+
+julia> e2 = basisvector(2)
+
+1.0*e2
+
+julia> e3 = basisvector(3)
+
+1.0*e3
+
+julia> scalarproduct(e1,e1)
+
+1.0
+
+julia> scalarproduct(e1,e2)
+
+0.0
+
+julia> e1 + 2 * e2 + e3
+
+1.0*e1 + 2.0*e2 + 1.0*e3
+
+julia> e1^e2
+
+1.0*e1^e2
+
+julia> e1^e1
+
+0
+
+julia> e1^e2
+
+1.0*e1^e2
+
+julia> (e0 + e1 + e1^e3)^e2
+
+1.0*e2 + 1.0*e1^e2 - 1.0*e1^e2^e3
+
+julia> (e0 + e1 + e1^e3)^e2^e3
+
+1.0*e2^e3 + 1.0*e1^e2^e3
